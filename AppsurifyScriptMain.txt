@@ -8,10 +8,24 @@ echo $commitId
 #how to run tests
 #use full names - value True or False
 fullname="False"
+#url
+url="http://appsurify.dev.appsurify.com"
 #API Key
 apiKey="MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00"
+#Project
+project="2"
+#for testing
+#project="28"
+#Test Suite
+testsuite="1"
+#For testing 6
+#Max tests to run per iteration
+maxtests=10
+#report directory
+report=./target/surefire-reports/*.xml
 
 #Tests to run
+#Options - True, False, Red and Orange.  Red and Orange indicates if we are only to run them if the the risk is red or orange.
 #run high
 high="True"
 #run medium
@@ -30,25 +44,41 @@ rerun="True"
 #For Testing
 commitId="e8056a83e26be8d05fbce5c3348c35b8b538fed1"
 
+#get risk of commit
+json=`curl --header "token: $apiKey" "$url/api/external/commit-risk/?project=$project&commit=$commitId" | sed 's/\"//g'`
+commitrisk=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w level ` ; echo $commitrisk
+echo $commitrisk
+#example level:2
+runhigh="False"
+if [[ ( $commitrisk == "level:1" && ( $high == "Red" || $high == "Orange") ) || ( $commitrisk == "level:2" && $high == "Orange" ) || ( $high == "True" )]] ; then runhigh="True" ; fi
+runmedium="False"
+if [[ ( $commitrisk == "level:1" && ( $medium == "Red" || $medium == "Orange") ) || ( $commitrisk == "level:2" && $medium == "Orange" ) || ( $medium == "True" )]] ; then runmedium="True" ; fi
+runlow="False"
+if [[ ( $commitrisk == "level:1" && ( $low == "Red" || $low == "Orange") ) || ( $commitrisk == "level:2" && $low == "Orange" ) || ( $low == "True" )]] ; then runlow="True" ; fi
+rununassigned="False"
+if [[ ( $commitrisk == "level:1" && ( $unassigned == "Red" || $unassigned == "Orange") ) || ( $commitrisk == "level:2" && $unassigned == "Orange" ) || ( $unassigned == "True" )]] ; then rununassigned="True" ; fi
+runrerun="False"
+if [[ ( $commitrisk == "level:1" && ( $rerun == "Red" || $rerun == "Orange") ) || ( $commitrisk == "level:2" && $rerun == "Orange" ) || ( $rerun == "True" )]] ; then runrerun="True" ; fi
+echo $runmedium
 
 #get tests to run for commit
 
-json=`curl --header "token: $apiKey" "http://appsurify.dev.appsurify.com/api/external/prioritized-tests/?project=2&priority=5&full_name=$fullnametest_suite=1&commit=$commitId" | sed 's/\"//g'`
+json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=5&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'`
 #json="[{\"name\":\"Test1\"},{\"name\":\"Test2\"},{\"name\":\"Test3\"},{\"name\":\"Test4\"},{\"name\":\"Test5\"}]"
 echo $json
 prop="name"
 values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' `
 echo $values
 if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi
-for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % 10 )) -eq "0" ]; then finalTestNames=$finalTestNames`echo "sample.junit.PriorityTest#"$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo "sample.junit.PriorityTest#"$testName,`; fi;done
+for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % $maxtests )) -eq "0" ]; then finalTestNames=$finalTestNames`echo "sample.junit.PriorityTest#"$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo "sample.junit.PriorityTest#"$testName,`; fi;done
 finalTestNames=`echo $finalTestNames | sed 's/,$//g'`
 if [[ $finalTestNames != "" ]] ; then mvn -Dtest=$finalTestNames test ; fi
 ##################################################
 #push test results to Appsurify
-if [[ $finalTestNames != "" ]] ; then fileName=`ls ./target/surefire-reports/*.xml` ;fi
+if [[ $finalTestNames != "" ]] ; then fileName=`ls $report` ;fi
 if [[ $finalTestNames != "" ]] ; then echo $fileName ; fi
-if [[ $finalTestNames != "" ]] ; then echo `curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H 'token: $apiKey' -F "file=@$fileName" -F 'project=28' -F 'test_suite=6' -F 'type=junit' -F 'commit=$commitId'` ; fi
-if [[ $finalTestNames != "" ]] ; then import=`curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H 'token: $apiKey' -F "file=@$fileName" -F 'project=28' -F 'test_suite=6' -F 'type=junit' -F 'commit=$commitId'` ; fi
+if [[ $finalTestNames != "" ]] ; then echo `curl -X POST $url/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H 'token: $apiKey' -F "file=@$fileName" -F 'project=$project' -F 'test_suite=$testsuite' -F 'type=junit' -F 'commit=$commitId'` ; fi
+if [[ $finalTestNames != "" ]] ; then import=`curl -X POST $url/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H 'token: $apiKey' -F "file=@$fileName" -F 'project=$project' -F 'test_suite=$testsuite' -F 'type=junit' -F 'commit=$commitId'` ; fi
 if [[ $finalTestNames != "" ]] ; then echo $import ; fi
 #get testrun id
 echo $import | sed 's/\\\\\//\//g'
@@ -65,10 +95,14 @@ if [[ $finalTestNames != "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/te
 #print testrun name
 if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
 #get results
-if [[ $finalTestNames != "" ]] ; then finalRes=`curl --header "token: $apiKey" "http://appsurify.dev.appsurify.com/api/external/output/?${run_id}" ` ; echo $finalRes ; fi
+if [[ $finalTestNames != "" ]] ; then finalRes=`curl --header "token: $apiKey" "$url/api/external/output/?${run_id}" ` ; echo $finalRes ; fi
 if [[ $finalTestNames != "" ]] ; then new_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w new_defects ` ; echo $new_defects ; fi
 v=`echo $finalRes | sed 's/failed_test:/\"/g'` 
 if [[ $finalTestNames != "" ]] ; then reopened_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w reopened_defects ` ; echo $reopened_defects ; fi
 if [[ $finalTestNames != "" ]] ; then echo $finalRes ; fi
 if [[ $finalTestNames != "" ]] ; then echo $reopened_defects ; fi
 if [[ $finalTestNames != "" ]] ; then if [[ $new_defects != "new_defects:0" || $reopened_defects != "reopened_defects:0" ]] ; then exit 1 ; fi ; fi
+
+#####
+#Exit if no tests found
+#if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi
