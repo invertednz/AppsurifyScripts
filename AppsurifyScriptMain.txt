@@ -1,14 +1,27 @@
-#!/bin/sh
-#mvn test
-#ant test
-#gradle compile test
 echo "start"
 #get commit
 commitId=`git log -1 --pretty="%H"`
 echo $commitId
+
+
+#######Configuration
+#use full names - value True or False
+fullname="False"
+#run high
+high="True"
+#run medium
+medium="True"
+#run low
+low="False"
+#run unassigned
+unassigned="True"
+#rerun tests
+rerun="True"
+
+
 #get tests to run for commit
-#json=`curl --header "token: MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" "http://appsurify.dev.appsurify.com/api/external/prioritized-tests/?#project=2&priority=5&full_name=False&test_suite=1&commit=34" | sed 's/\"//g'`
-json=`curl --header "token: MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" "http://appsurify.dev.appsurify.com/api/external/prioritized-tests/?project=2&priority=5&full_name=False&test_suite=1&commit=e8056a83e26be8d05fbce5c3348c35b8b538fed1" | sed 's/\"//g'`
+
+json=`curl --header "token: MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" "http://appsurify.dev.appsurify.com/api/external/prioritized-tests/?project=2&priority=5&full_name=$fullnametest_suite=1&commit=e8056a83e26be8d05fbce5c3348c35b8b538fed1" | sed 's/\"//g'`
 #json="[{\"name\":\"Test1\"},{\"name\":\"Test2\"},{\"name\":\"Test3\"},{\"name\":\"Test4\"},{\"name\":\"Test5\"}]"
 echo $json
 prop="name"
