@@ -1,0 +1,49 @@
+#!/bin/sh
+#mvn test
+#ant test
+#gradle compile test
+echo "start"
+#get commit
+commitId=`git log -1 --pretty="%H"`
+echo $commitId
+#get tests to run for commit
+#json=`curl --header "token: MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" "http://appsurify.dev.appsurify.com/api/external/prioritized-tests/?#project=2&priority=5&full_name=False&test_suite=1&commit=34" | sed 's/\"//g'`
+json=`curl --header "token: MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" "http://appsurify.dev.appsurify.com/api/external/prioritized-tests/?project=2&priority=5&full_name=False&test_suite=1&commit=e8056a83e26be8d05fbce5c3348c35b8b538fed1" | sed 's/\"//g'`
+#json="[{\"name\":\"Test1\"},{\"name\":\"Test2\"},{\"name\":\"Test3\"},{\"name\":\"Test4\"},{\"name\":\"Test5\"}]"
+echo $json
+prop="name"
+values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' `
+echo $values
+if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi
+for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % 10 )) -eq "0" ]; then finalTestNames=$finalTestNames`echo "sample.junit.PriorityTest#"$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo "sample.junit.PriorityTest#"$testName,`; fi;done
+finalTestNames=`echo $finalTestNames | sed 's/,$//g'`
+if [[ $finalTestNames != "" ]] ; then mvn -Dtest=$finalTestNames test ; fi
+##################################################
+#push test results to Appsurify
+if [[ $finalTestNames != "" ]] ; then fileName=`ls ./target/surefire-reports/*.xml` ;fi
+if [[ $finalTestNames != "" ]] ; then echo $fileName ; fi
+if [[ $finalTestNames != "" ]] ; then echo `curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H 'token: MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00' -F "file=@$fileName" -F 'project=28' -F 'test_suite=6' -F 'type=junit' -F 'commit=e8056a83e26be8d05fbce5c3348c35b8b538fed1'` ; fi
+if [[ $finalTestNames != "" ]] ; then import=`curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H 'token: MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00' -F "file=@$fileName" -F 'project=28' -F 'test_suite=6' -F 'type=junit' -F 'commit=e8056a83e26be8d05fbce5c3348c35b8b538fed1'` ; fi
+if [[ $finalTestNames != "" ]] ; then echo $import ; fi
+#get testrun id
+echo $import | sed 's/\\\\\//\//g'
+echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g'
+var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' `
+echo $var
+run_id=`echo $var\" | sed 's/test_run_id://g' `
+echo $run_id
+#echo "test_run_id:44"  | sed 's/test_run_id://g'
+#echo $var | sed 's/test_run_id://g'
+#echo "test_run_id:44"  | sed 's/test_run_id://g'
+#echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' | sed 's/test_run_id://g'
+if [[ $finalTestNames != "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
+#print testrun name
+if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
+#get results
+if [[ $finalTestNames != "" ]] ; then finalRes=`curl --header "token: MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" "http://appsurify.dev.appsurify.com/api/external/output/?${run_id}" ` ; echo $finalRes ; fi
+if [[ $finalTestNames != "" ]] ; then new_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w new_defects ` ; echo $new_defects ; fi
+v=`echo $finalRes | sed 's/failed_test:/\"/g'` 
+if [[ $finalTestNames != "" ]] ; then reopened_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w reopened_defects ` ; echo $reopened_defects ; fi
+if [[ $finalTestNames != "" ]] ; then echo $finalRes ; fi
+if [[ $finalTestNames != "" ]] ; then echo $reopened_defects ; fi
+if [[ $finalTestNames != "" ]] ; then if [[ $new_defects != "new_defects:0" || $reopened_defects != "reopened_defects:0" ]] ; then exit 1 ; fi ; fi
