@@ -29,22 +29,34 @@ report=./target/surefire-reports/*.xml
 #run high
 high="True"
 #run medium
-medium="True"
+medium="Red"
 #run low
 low="False"
 #run unassigned
 unassigned="True"
 #rerun tests
 rerun="True"
+#run tests with open defects associated with them
+open="True"
+#run tests with defects which are ready to test associated with them
+ready="True"
+
+#Variables
+run_id=""
 
 #TODO
 #Fail early
 #rerun after each stage
+#fail on new defects
+#fail on any failures
+#fail on reopened defects
+#fail on max failures
+#fail on max flaky tests
 
 #For Testing
 commitId="e8056a83e26be8d05fbce5c3348c35b8b538fed1"
 
-#get risk of commit
+#get risk of commit and tests to run
 json=`curl --header "token: $apiKey" "$url/api/external/commit-risk/?project=$project&commit=$commitId" | sed 's/\"//g'`
 commitrisk=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w level ` ; echo $commitrisk
 echo $commitrisk
@@ -59,12 +71,16 @@ rununassigned="False"
 if [[ ( $commitrisk == "level:1" && ( $unassigned == "Red" || $unassigned == "Orange") ) || ( $commitrisk == "level:2" && $unassigned == "Orange" ) || ( $unassigned == "True" )]] ; then rununassigned="True" ; fi
 runrerun="False"
 if [[ ( $commitrisk == "level:1" && ( $rerun == "Red" || $rerun == "Orange") ) || ( $commitrisk == "level:2" && $rerun == "Orange" ) || ( $rerun == "True" )]] ; then runrerun="True" ; fi
-echo $runmedium
+runopen="False"
+if [[ ( $commitrisk == "level:1" && ( $open == "Red" || $open == "Orange") ) || ( $commitrisk == "level:2" && $open == "Orange" ) || ( $open == "True" )]] ; then runopen="True" ; fi
+runready="False"
+if [[ ( $commitrisk == "level:1" && ( $ready == "Red" || $ready == "Orange") ) || ( $commitrisk == "level:2" && $ready == "Orange" ) || ( $ready == "True" )]] ; then runready="True" ; fi
+
 
 #get tests to run for commit
+#Run High tests
 
-json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=5&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'`
-#json="[{\"name\":\"Test1\"},{\"name\":\"Test2\"},{\"name\":\"Test3\"},{\"name\":\"Test4\"},{\"name\":\"Test5\"}]"
+if [[ $runhigh -= "True" ]] ; then json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=1&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'` ; fi
 echo $json
 prop="name"
 values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' `
@@ -81,16 +97,8 @@ if [[ $finalTestNames != "" ]] ; then echo `curl -X POST $url/api/external/impor
 if [[ $finalTestNames != "" ]] ; then import=`curl -X POST $url/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H 'token: $apiKey' -F "file=@$fileName" -F 'project=$project' -F 'test_suite=$testsuite' -F 'type=junit' -F 'commit=$commitId'` ; fi
 if [[ $finalTestNames != "" ]] ; then echo $import ; fi
 #get testrun id
-echo $import | sed 's/\\\\\//\//g'
-echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g'
-var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' `
+if [[ $finalTestNames != "" ]] ; then var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' ` ; fi
 echo $var
-run_id=`echo $var\" | sed 's/test_run_id://g' `
-echo $run_id
-#echo "test_run_id:44"  | sed 's/test_run_id://g'
-#echo $var | sed 's/test_run_id://g'
-#echo "test_run_id:44"  | sed 's/test_run_id://g'
-#echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' | sed 's/test_run_id://g'
 if [[ $finalTestNames != "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
 #print testrun name
 if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
