@@ -4,9 +4,12 @@ commitId=`git log -1 --pretty="%H"`
 echo $commitId
 
 
+###########################
+#replace mvn -Dtest=$finalTestNames test with your command to run the tests using $finalTestNames as the variable of tests to run
+
 #######Configuration
 #how to run tests
-#use full names - value True or False
+#use full names - value True or False - True will return the classname.name i.e. if your test is <testcase classname="junit.TestRun" name="PassToFail" time="0.008"> then it would return junit.TestRun.PasstoFail
 fullname="False"
 #url
 url="http://appsurify.dev.appsurify.com"
@@ -14,15 +17,14 @@ url="http://appsurify.dev.appsurify.com"
 apiKey="MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00"
 #Project
 project="2"
-#for testing
-#project="28"
 #Test Suite
 testsuite="1"
-#For testing 6
-#Max tests to run per iteration
-maxtests=10
 #report directory
 report=./target/surefire-reports/*.xml
+#If any additional text is required before the test name then put it here example starttests="sample.junit.PriorityTest#" if not storing the classname
+starttests="sample.junit.PriorityTest#"
+importtype="junit"
+
 
 #Tests to run
 #Options - True, False, Red and Orange.  Red and Orange indicates if we are only to run them if the the risk is red or orange.
@@ -41,8 +43,12 @@ open="True"
 #run tests with defects which are ready to test associated with them
 ready="True"
 
-#Variables
+
+
+#Variables do not change
 run_id=""
+#Max tests to run per iteration
+maxtests=10000000000
 
 #TODO
 #Fail early
@@ -55,6 +61,7 @@ run_id=""
 
 #For Testing
 commitId="e8056a83e26be8d05fbce5c3348c35b8b538fed1"
+
 
 #get risk of commit and tests to run
 json=`curl --header "token: $apiKey" "$url/api/external/commit-risk/?project=$project&commit=$commitId" | sed 's/\"//g'`
@@ -80,28 +87,214 @@ if [[ ( $commitrisk == "level:1" && ( $ready == "Red" || $ready == "Orange") ) |
 #get tests to run for commit
 #Run High tests
 
-if [[ $runhigh -= "True" ]] ; then json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=1&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'` ; fi
-echo $json
-prop="name"
-values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' `
-echo $values
-if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi
-for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % $maxtests )) -eq "0" ]; then finalTestNames=$finalTestNames`echo "sample.junit.PriorityTest#"$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo "sample.junit.PriorityTest#"$testName,`; fi;done
-finalTestNames=`echo $finalTestNames | sed 's/,$//g'`
+#####Testing also change 5 to 1
+runhigh="True"
+
+finalTestNames=""
+if [[ $runhigh == "True" ]] ; then json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=5&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'` ; fi
+if [[ $runhigh == "True" ]] ; then echo $json ; fi
+if [[ $runhigh == "True" ]] ; then prop="name" ; fi
+if [[ $runhigh == "True" ]] ; then values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' ` ; fi
+if [[ $runhigh == "True" ]] ; then echo $values ; fi
+if [[ $runhigh == "True" ]] ; then if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi ; fi
+if [[ $runhigh == "True" ]] ; then for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % $maxtests )) -eq "0" ]; then finalTestNames=$finalTestNames`echo $starttests$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo $starttests$testName,`; fi;done ; fi
+if [[ $runhigh == "True" ]] ; then finalTestNames=`echo $finalTestNames | sed 's/,$//g'` ; fi
 if [[ $finalTestNames != "" ]] ; then mvn -Dtest=$finalTestNames test ; fi
-##################################################
+############
+
+##Testing
+project="60"
+#Test Suite
+testsuite="20"
+#commit
+commitId="f4ac5c84878ddaf4b9a3c5a48475cbbdee7faf0a"
 #push test results to Appsurify
 if [[ $finalTestNames != "" ]] ; then fileName=`ls $report` ;fi
 if [[ $finalTestNames != "" ]] ; then echo $fileName ; fi
-if [[ $finalTestNames != "" ]] ; then echo `curl -X POST $url/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H 'token: $apiKey' -F "file=@$fileName" -F 'project=$project' -F 'test_suite=$testsuite' -F 'type=junit' -F 'commit=$commitId'` ; fi
-if [[ $finalTestNames != "" ]] ; then import=`curl -X POST $url/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H 'token: $apiKey' -F "file=@$fileName" -F 'project=$project' -F 'test_suite=$testsuite' -F 'type=junit' -F 'commit=$commitId'` ; fi
+if [[ $finalTestNames != "" ]] ; then import=`curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H "token: $apiKey" -F "file=@$fileName" -F 'project'=$project -F 'test_suite'=$testsuite -F 'type'=$importtype -F 'commit'=$commitId` ; fi
 if [[ $finalTestNames != "" ]] ; then echo $import ; fi
 #get testrun id
 if [[ $finalTestNames != "" ]] ; then var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' ` ; fi
 echo $var
-if [[ $finalTestNames != "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
+if [[ $finalTestNames != "" && $run_id == "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
 #print testrun name
 if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
+
+#Run Medium tests
+
+
+finalTestNames=""
+if [[ $runmedium == "True" ]] ; then json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=2&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'` ; fi
+if [[ $runmedium == "True" ]] ; then echo $json ; fi
+if [[ $runmedium == "True" ]] ; then prop="name" ; fi
+if [[ $runmedium == "True" ]] ; then values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' ` ; fi
+if [[ $runmedium == "True" ]] ; then echo $values ; fi
+if [[ $runmedium == "True" ]] ; then if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi ; fi
+if [[ $runmedium == "True" ]] ; then for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % $maxtests )) -eq "0" ]; then finalTestNames=$finalTestNames`echo $starttests$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo $starttests$testName,`; fi;done ; fi
+if [[ $runmedium == "True" ]] ; then finalTestNames=`echo $finalTestNames | sed 's/,$//g'` ; fi
+if [[ $finalTestNames != "" ]] ; then mvn -Dtest=$finalTestNames test ; fi
+############
+
+
+#push test results to Appsurify
+if [[ $finalTestNames != "" ]] ; then fileName=`ls $report` ;fi
+if [[ $finalTestNames != "" ]] ; then echo $fileName ; fi
+if [[ $finalTestNames != "" ]] ; then import=`curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H "token: $apiKey" -F "file=@$fileName" -F 'project'=$project -F 'test_suite'=$testsuite -F 'type'=$importtype -F 'commit'=$commitId` ; fi
+if [[ $finalTestNames != "" ]] ; then echo $import ; fi
+#get testrun id
+if [[ $finalTestNames != "" ]] ; then var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' ` ; fi
+echo $var
+if [[ $finalTestNames != "" && $run_id == "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
+#print testrun name
+if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
+
+
+#Run Low tests
+
+
+finalTestNames=""
+if [[ $runlow == "True" ]] ; then json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=3&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'` ; fi
+if [[ $runlow == "True" ]] ; then echo $json ; fi
+if [[ $runlow == "True" ]] ; then prop="name" ; fi
+if [[ $runlow == "True" ]] ; then values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' ` ; fi
+if [[ $runlow == "True" ]] ; then echo $values ; fi
+if [[ $runlow == "True" ]] ; then if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi ; fi
+if [[ $runlow == "True" ]] ; then for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % $maxtests )) -eq "0" ]; then finalTestNames=$finalTestNames`echo $starttests$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo $starttests$testName,`; fi;done ; fi
+if [[ $runlow == "True" ]] ; then finalTestNames=`echo $finalTestNames | sed 's/,$//g'` ; fi
+if [[ $finalTestNames != "" ]] ; then mvn -Dtest=$finalTestNames test ; fi
+############
+
+
+#push test results to Appsurify
+if [[ $finalTestNames != "" ]] ; then fileName=`ls $report` ;fi
+if [[ $finalTestNames != "" ]] ; then echo $fileName ; fi
+if [[ $finalTestNames != "" ]] ; then import=`curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H "token: $apiKey" -F "file=@$fileName" -F 'project'=$project -F 'test_suite'=$testsuite -F 'type'=$importtype -F 'commit'=$commitId` ; fi
+if [[ $finalTestNames != "" ]] ; then echo $import ; fi
+#get testrun id
+if [[ $finalTestNames != "" ]] ; then var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' ` ; fi
+echo $var
+if [[ $finalTestNames != "" && $run_id == "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
+#print testrun name
+if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
+
+
+#Run unassigned tests
+
+
+finalTestNames=""
+if [[ $rununassigned == "True" ]] ; then json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=4&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'` ; fi
+if [[ $rununassigned == "True" ]] ; then echo $json ; fi
+if [[ $rununassigned == "True" ]] ; then prop="name" ; fi
+if [[ $rununassigned == "True" ]] ; then values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' ` ; fi
+if [[ $rununassigned == "True" ]] ; then echo $values ; fi
+if [[ $rununassigned == "True" ]] ; then if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi ; fi
+if [[ $rununassigned == "True" ]] ; then for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % $maxtests )) -eq "0" ]; then finalTestNames=$finalTestNames`echo $starttests$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo $starttests$testName,`; fi;done ; fi
+if [[ $rununassigned == "True" ]] ; then finalTestNames=`echo $finalTestNames | sed 's/,$//g'` ; fi
+if [[ $finalTestNames != "" ]] ; then mvn -Dtest=$finalTestNames test ; fi
+############
+
+
+#push test results to Appsurify
+if [[ $finalTestNames != "" ]] ; then fileName=`ls $report` ;fi
+if [[ $finalTestNames != "" ]] ; then echo $fileName ; fi
+if [[ $finalTestNames != "" ]] ; then import=`curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H "token: $apiKey" -F "file=@$fileName" -F 'project'=$project -F 'test_suite'=$testsuite -F 'type'=$importtype -F 'commit'=$commitId` ; fi
+if [[ $finalTestNames != "" ]] ; then echo $import ; fi
+#get testrun id
+if [[ $finalTestNames != "" ]] ; then var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' ` ; fi
+echo $var
+if [[ $finalTestNames != "" && $run_id == "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
+#print testrun name
+if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
+
+
+#Run Ready tests
+
+
+finalTestNames=""
+if [[ $runready == "True" ]] ; then json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=6&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'` ; fi
+if [[ $runready == "True" ]] ; then echo $json ; fi
+if [[ $runready == "True" ]] ; then prop="name" ; fi
+if [[ $runready == "True" ]] ; then values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' ` ; fi
+if [[ $runready == "True" ]] ; then echo $values ; fi
+if [[ $runready == "True" ]] ; then if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi ; fi
+if [[ $runready == "True" ]] ; then for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % $maxtests )) -eq "0" ]; then finalTestNames=$finalTestNames`echo $starttests$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo $starttests$testName,`; fi;done ; fi
+if [[ $runready == "True" ]] ; then finalTestNames=`echo $finalTestNames | sed 's/,$//g'` ; fi
+if [[ $finalTestNames != "" ]] ; then mvn -Dtest=$finalTestNames test ; fi
+############
+
+#push test results to Appsurify
+if [[ $finalTestNames != "" ]] ; then fileName=`ls $report` ;fi
+if [[ $finalTestNames != "" ]] ; then echo $fileName ; fi
+if [[ $finalTestNames != "" ]] ; then import=`curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H "token: $apiKey" -F "file=@$fileName" -F 'project'=$project -F 'test_suite'=$testsuite -F 'type'=$importtype -F 'commit'=$commitId` ; fi
+if [[ $finalTestNames != "" ]] ; then echo $import ; fi
+#get testrun id
+if [[ $finalTestNames != "" ]] ; then var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' ` ; fi
+echo $var
+if [[ $finalTestNames != "" && $run_id == "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
+#print testrun name
+if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
+
+
+#Run Open tests
+
+
+finalTestNames=""
+if [[ $runopen == "True" ]] ; then json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=7&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'` ; fi
+if [[ $runopen == "True" ]] ; then echo $json ; fi
+if [[ $runopen == "True" ]] ; then prop="name" ; fi
+if [[ $runopen == "True" ]] ; then values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' ` ; fi
+if [[ $runopen == "True" ]] ; then echo $values ; fi
+if [[ $runopen == "True" ]] ; then if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi ; fi
+if [[ $runopen == "True" ]] ; then for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % $maxtests )) -eq "0" ]; then finalTestNames=$finalTestNames`echo $starttests$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo $starttests$testName,`; fi;done ; fi
+if [[ $runopen == "True" ]] ; then finalTestNames=`echo $finalTestNames | sed 's/,$//g'` ; fi
+if [[ $finalTestNames != "" ]] ; then mvn -Dtest=$finalTestNames test ; fi
+############
+
+
+#push test results to Appsurify
+if [[ $finalTestNames != "" ]] ; then fileName=`ls $report` ;fi
+if [[ $finalTestNames != "" ]] ; then echo $fileName ; fi
+if [[ $finalTestNames != "" ]] ; then import=`curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H "token: $apiKey" -F "file=@$fileName" -F 'project'=$project -F 'test_suite'=$testsuite -F 'type'=$importtype -F 'commit'=$commitId` ; fi
+if [[ $finalTestNames != "" ]] ; then echo $import ; fi
+#get testrun id
+if [[ $finalTestNames != "" ]] ; then var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' ` ; fi
+echo $var
+if [[ $finalTestNames != "" && $run_id == "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
+#print testrun name
+if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
+
+
+#Run Rerun tests
+
+
+finalTestNames=""
+if [[ $runrerun == "True" ]] ; then json=`curl --header "token: $apiKey" "$url/api/external/prioritized-tests/?project=$project&priority=5&full_name=$fullname&test_suite=$testsuite&commit=$commitId" | sed 's/\"//g'` ; fi
+if [[ $runrerun == "True" ]] ; then echo $json ; fi
+if [[ $runrerun == "True" ]] ; then prop="name" ; fi
+if [[ $runrerun == "True" ]] ; then values=`echo $json | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' | grep -w $prop | sed 's/\[//g' | sed 's/\]//g' | sed 's/name://g' ` ; fi
+if [[ $runrerun == "True" ]] ; then echo $values ; fi
+if [[ $runrerun == "True" ]] ; then if [[ $json != *"name"* ]] ; then echo "No test found" ; values="" ; fi ; fi
+if [[ $runrerun == "True" ]] ; then for testName in $values; do count=$((count+1));  echo $count; if [ $(( $count % $maxtests )) -eq "0" ]; then finalTestNames=$finalTestNames`echo $starttests$testName,`; finalTestNames=`echo $finalTestNames | sed 's/,$//g'`; mvn -Dtest=$finalTestNames test ; finalTestNames=""; else finalTestNames=$finalTestNames`echo $starttests$testName,`; fi;done ; fi
+if [[ $runrerun == "True" ]] ; then finalTestNames=`echo $finalTestNames | sed 's/,$//g'` ; fi
+if [[ $finalTestNames != "" ]] ; then mvn -Dtest=$finalTestNames test ; fi
+############
+
+
+#push test results to Appsurify
+if [[ $finalTestNames != "" ]] ; then fileName=`ls $report` ;fi
+if [[ $finalTestNames != "" ]] ; then echo $fileName ; fi
+if [[ $finalTestNames != "" ]] ; then import=`curl -X POST http://appsurify.dev.appsurify.com/api/external/import/ -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H "token: $apiKey" -F "file=@$fileName" -F 'project'=$project -F 'test_suite'=$testsuite -F 'type'=$importtype -F 'commit'=$commitId` ; fi
+if [[ $finalTestNames != "" ]] ; then echo $import ; fi
+#get testrun id
+if [[ $finalTestNames != "" ]] ; then var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' ` ; fi
+echo $var
+if [[ $finalTestNames != "" && $run_id == "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
+#print testrun name
+if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
+
+
+
+################################################################
 #get results
 if [[ $finalTestNames != "" ]] ; then finalRes=`curl --header "token: $apiKey" "$url/api/external/output/?${run_id}" ` ; echo $finalRes ; fi
 if [[ $finalTestNames != "" ]] ; then new_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w new_defects ` ; echo $new_defects ; fi
