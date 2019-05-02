@@ -296,13 +296,13 @@ if [[ $finalTestNames != "" ]] ; then echo $run_id ; fi
 
 ################################################################
 #get results
-if [[ $finalTestNames != "" ]] ; then finalRes=`curl --header "token: $apiKey" "$url/api/external/output/?${run_id}" ` ; echo $finalRes ; fi
-if [[ $finalTestNames != "" ]] ; then new_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w new_defects ` ; echo $new_defects ; fi
+if [[ $run_id != "" ]] ; then finalRes=`curl --header "token: $apiKey" "$url/api/external/output/?${run_id}" ` ; echo $finalRes ; fi
+if [[ $run_id != "" ]] ; then new_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w new_defects ` ; echo $new_defects ; fi
 v=`echo $finalRes | sed 's/failed_test:/\"/g'` 
-if [[ $finalTestNames != "" ]] ; then reopened_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w reopened_defects ` ; echo $reopened_defects ; fi
-if [[ $finalTestNames != "" ]] ; then echo $finalRes ; fi
-if [[ $finalTestNames != "" ]] ; then echo $reopened_defects ; fi
-if [[ $finalTestNames != "" ]] ; then if [[ $new_defects != "new_defects:0" || $reopened_defects != "reopened_defects:0" ]] ; then exit 1 ; fi ; fi
+if [[ $run_id != "" ]] ; then reopened_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w reopened_defects ` ; echo $reopened_defects ; fi
+if [[ $run_id != "" ]] ; then echo $finalRes ; fi
+if [[ $run_id != "" ]] ; then echo $reopened_defects ; fi
+if [[ $run_id != "" ]] ; then if [[ $new_defects != "new_defects:0" || $reopened_defects != "reopened_defects:0" ]] ; then exit 1 ; fi ; fi
 
 #####
 #Exit if no tests found
