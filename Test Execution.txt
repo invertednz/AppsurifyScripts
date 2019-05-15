@@ -1,0 +1,44 @@
+Commands needed for running tests with Appsurify
+
+Java
+mvn -Dtest=$finalTestNames test 
+
+
+Mocha
+mocha --reporter xunit --grep=\"Array #indexOf() should return -1 when the value is not present$\"" 
+http://www.petecorey.com/blog/2016/07/25/mochas-grep-flag/
+
+
+Jest
+--testNamePattern=<regex>
+--reporters="jest-junit"
+https://github.com/jest-community/jest-junit
+https://stackoverflow.com/questions/54334935/how-to-run-specific-test-suite-in-jest-puppeteer
+
+
+Nightwatch
+node nightwatch.js -e chrome --test tests/login_test --testcase tc_001
+https://nightwatchjs.org/guide/#command-line-options
+--reporter	-r	junit
+
+Protractor
+protractor --specs='tests/e2e/login.js' --grep="SingleLoginTest"
+https://github.com/angular/protractor-cookbook/tree/master/jasmine-junit-reports
+https://www.protractortest.org/#/faq
+
+Jasmine
+https://github.com/jasmine-contrib/grunt-jasmine-node
+https://www.npmjs.com/package/jasmine-reporters
+https://www.protractortest.org/#/faq
+
+
+Puppeteer
+npm test -- -u -t="will be ran$"
+https://github.com/andymonis/puppeteer-jasmine-reporter
+
+Cypress
+cypress run --reporter junit \
+  --reporter-options "mochaFile=results/my-test-output.xml,toConsole=true"
+
+Karma
+https://github.com/karma-runner/karma-junit-reporter
