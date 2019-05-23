@@ -22,3 +22,5 @@ echo $report"*.xml\`"
 #new_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w new_defects ` ; echo $new_defects
 #reopened_defects=`echo $finalRes | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  grep -w reopened_defects ` ; echo $reopened_defects
 #if [[ $new_defects != "new_defects:0" || $reopened_defects != "reopened_defects:0" ]] ; then exit 1 ; fi
+
+exit 1
