@@ -1,6 +1,6 @@
 #url
 #url="http://appsurify.dev.appsurify.com"
-url = $1
+url=$1
 #API Key
 #apiKey="MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00"
 apiKey=$2
@@ -17,3 +17,5 @@ echo $url
 echo $apiKey
 echo $project
 echo $testsuite
+
+exit 1
