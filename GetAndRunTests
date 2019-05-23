@@ -11,12 +11,10 @@ project=$3
 #testsuite="1"
 testsuite=$4
 #get commit
-commitId=`git log -1 --pretty="%H"`
+commitId=$5
 
 echo $url
 echo $apiKey
 echo $project
 echo $testsuite
 echo $commitId
-
-. ./GetAndRunTests.sh "$1" "$2" "$3" "$4" "$commitId"
