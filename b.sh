@@ -2,4 +2,4 @@
 
 echo "[B] The message is: $MESSAGE"
 
-MESSAGE="goodbye"
+MESSAGES="goodbye"
