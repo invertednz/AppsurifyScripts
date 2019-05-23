@@ -1,2 +1,1 @@
-. common
-echo $a
+echo $message

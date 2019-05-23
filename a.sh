@@ -1,3 +1,3 @@
-. common
-echo "testing"
+message = "testing"
+export message
 exit
