@@ -18,3 +18,5 @@ echo $apiKey
 echo $project
 echo $testsuite
 echo $commitId
+
+#mvn test
