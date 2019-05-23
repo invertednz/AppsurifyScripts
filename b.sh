@@ -1,3 +1,3 @@
 echo $MESSAGE
-MESSAGES="test"
+MESSAGES="hello"
 export MESSAGES
