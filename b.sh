@@ -1,3 +1,5 @@
-echo $MESSAGE
-MESSAGES="hello2"
-export MESSAGES
+#!/bin/sh
+
+echo "[B] The message is: $MESSAGE"
+
+MESSAGE="goodbye"

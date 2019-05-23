@@ -1,4 +1,5 @@
 MESSAGE="hello"
-export MESSAGE
-./b.sh
-echo $MESSAGES
+
+. ./b.sh
+
+echo "[A] The message is: $MESSAGE"
