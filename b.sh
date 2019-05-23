@@ -1,1 +1,1 @@
-echo $message
+echo $MESSAGE

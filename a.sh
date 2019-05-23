@@ -1,3 +1,2 @@
-message = "testing"
-export message
-exit
+MESSAGE="hello"
+export MESSAGE
