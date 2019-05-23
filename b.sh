@@ -1,0 +1,2 @@
+. common
+echo $a

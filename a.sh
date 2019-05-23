@@ -1,0 +1,3 @@
+. common
+echo "testing"
+exit
