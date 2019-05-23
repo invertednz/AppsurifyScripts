@@ -29,5 +29,5 @@ echo $commitId
 
 echo $run_id
 
-. ./GetResultsFromAppsurify.sh 
+. ./GetResultsFromAppsurify.sh "$1" "$2" "$3" "$4" "$commitId" "$report"
 
