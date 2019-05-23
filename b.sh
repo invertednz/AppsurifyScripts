@@ -1,3 +1,3 @@
 echo $MESSAGE
-MESSAGE="test"
-export MESSAGE
+MESSAGES="test"
+export MESSAGES
