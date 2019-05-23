@@ -1,1 +1,2 @@
 echo $MESSAGE
+MESSAGE="test"
