@@ -1,4 +1,3 @@
-
 if [[ $reporttype == "directory" ]] ; then
     for fileName in `ls -1 $report*.xml`
         do
@@ -22,6 +21,3 @@ if [[ $reporttype == "file" ]] ; then
     if [[ $run_id == "" ]] ; then run_id=`echo $var | sed 's/test_run_id:/test_run\=/g' ` ; fi
     #print testrun name
     echo $run_id ; fi
-
-
-	  

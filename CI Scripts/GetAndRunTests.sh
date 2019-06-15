@@ -36,6 +36,7 @@ if [[ $finalTestNames != "" ]] ; then execute_tests $finalTestNames ; fi
 rerun_tests () {
 if [[ $rerun == "true" ]]; then 
     numruns=0;
+    echo "rerun "$numruns
     while [ $numruns -lt $maxrerun ]
     do
         rerun_tests_execute
@@ -111,5 +112,3 @@ if [[ $failfast == "false" && $rerun == "true" ]] ; then rerun_tests ; fi
 #check results
 
 #run_id="this is the runid"
-
-
