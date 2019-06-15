@@ -114,10 +114,8 @@ while [ "$1" != "" ]; do
     shift
 done
 
-urlencode $testsuite
-testsuite=$?
-urlencode $project
-project=$?
+testsuiteencoded=$(urlencode "$testsuite")
+projectencoded=$(urlencode "$project")
 
 if [[ $report == *.xml* ]] ; then reporttype="file" ; fi
 if [[ $report == *.Xml* ]] ; then reporttype="file" ; fi
