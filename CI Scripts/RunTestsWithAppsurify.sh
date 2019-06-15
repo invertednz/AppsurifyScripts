@@ -94,7 +94,9 @@ while [ "$1" != "" ]; do
     shift
 done
 
-
+if [[ $report == *.xml* ]] ; then reporttype="file" ; fi
+if [[ $report == *.Xml* ]] ; then reporttype="file" ; fi
+if [[ $report == *.XML* ]] ; then reporttype="file" ; fi
 
 if [[ $url == "" ]] ; then echo "no url specified" ; exit 1 ; fi
 if [[ $apiKey == "" ]] ; then echo "no apiKey specified" ; exit 1 ; fi
@@ -116,5 +118,5 @@ echo $commitId
 
 #$url $apiKey $project $testsuite $fail $additionalargs $endrun $testseparator $postfixtest $prefixtest $startrun $fullnameseparator $fullname $failfast $maxrerun $rerun $importtype $teststorun $reporttype $report $commitId $run_id
 echo "Getting tests to run"
-. ./GetAndRunTests.sh #"$1" "$2" "$3" "$4" "$commitId" 
+#. ./GetAndRunTests.sh #"$1" "$2" "$3" "$4" "$commitId" 
 
