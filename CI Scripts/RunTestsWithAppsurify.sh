@@ -13,7 +13,7 @@ urlencode() {
 
 
 
-
+maxtests=1000000 #default 10000000
 fail="newdefects, reopeneddefects" #default new defects and reopened defects  #options newdefects, reopeneddefects, flakybrokentests, newflaky, reopenedflaky, failedtests, brokentests
 additionalargs="" #default ''
 endrun="" #default ''
@@ -106,6 +106,9 @@ while [ "$1" != "" ]; do
                                ;;
         -d | --commitId )      shift
                                commitId=$1
+                               ;;
+        -d | --maxtests )      shift
+                               maxtests=$1
                                ;;
         -h | --help )          echo "please see url for more details on this script and how to execute your tests with appsurify"
                                exit 1
