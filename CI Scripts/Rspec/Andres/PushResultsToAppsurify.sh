@@ -14,9 +14,9 @@ testsuite=$4
 commitId=$5
 report=$6
 importtype="junit"
-echo $report"*.xml\`"
 
-import=`curl -X POST "$url/api/external/import/" -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H "token: $apiKey" -F "file=@$report" -F 'project_name'=$project -F 'test_suite_name'=$testsuite -F 'type'=$importtype -F 'commit'=$commitId` ; fi
+
+import=`curl -X POST "$url/api/external/import/" -H 'content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW' -H "token: $apiKey" -F "file=@$report" -F 'project_name'="$project" -F 'test_suite_name'="$testsuite" -F 'type'=$importtype -F 'commit'=$commitId`
 echo $import
 #get testrun id
 var=`echo $import | sed 's/\\\\\//\//g' | sed 's/[{}]//g' |tr "," "\n" | sed 's/\"\:\"/\|/g' | sed 's/[\,]/ /g' | sed 's/\"//g' |  sed '10p;d' `

@@ -13,6 +13,7 @@ testsuite=$4
 #get commit
 commitId=$5
 report=$6
+spectoexec=$7
 importtype="junit"
 
 

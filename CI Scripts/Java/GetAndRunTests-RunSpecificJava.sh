@@ -15,6 +15,7 @@ commitId=$5
 
 starttests=""
 fullname="True"
+maxtests=10000000000
 
 priority=""
 if [[ $priority == "High" ]] ; priority="1" ; fi
