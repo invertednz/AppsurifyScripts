@@ -14,7 +14,7 @@ urlencode() {
 
 
 maxtests=1000000 #default 10000000
-fail="newdefects, reopeneddefects" #default new defects and reopened defects  #options newdefects, reopeneddefects, flakybrokentests, newflaky, reopenedflaky, failedtests, brokentests
+fail="newdefects, reopeneddefects, failedtests, brokentests" #default new defects and reopened defects  #options newdefects, reopeneddefects, flakybrokentests, newflaky, reopenedflaky, failedtests, brokentests
 additionalargs="" #default ''
 endrun="" #default ''
 testseparator="" #default ' '
@@ -26,14 +26,13 @@ failfast="false" #defult false
 maxrerun=3 #default 3
 rerun="false" #default false
 importtype="junit" #default junit
-reporttype="directory" #default directory
-teststorun="all" #options include - high, medium, low, unassigned, ready, open, none
+reporttype="file" #default directory
+teststorun="none" #options include - high, medium, low, unassigned, ready, open, none
 deletereports="false" #options true or false, BE CAREFUL THIS WILL DELETE THE SPECIFIC FILE OR ALL XML FILES IN THE DIRECTORY
 #startrun needs to end with a space sometimes
 #endrun needs to start with a space sometimes
+
 commitId=""
-
-
 
 ###############
 #atm rerunning tests and fast fail don't work together very well
@@ -135,7 +134,7 @@ if [[ $report == "" ]] ; then echo "no report specified" ; exit 1 ; fi
 #if [[ $teststorun == "" ]] ; then echo "no teststorun specified" ; exit 1 ; fi
 #if [[ $startrun == "" ]] ; then echo "no command used to start running tests specified" ; exit 1 ; fi
 
-####example 
+####example RunTestsWithAppsurify.sh --url "http://appsurify.dev.appsurify.com" --apikey "MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" --project "Test" --testsuite "Test" --report "report" --teststorun "all" --startrun "mvn -tests" 
 #example RunTestsWithAppsurify.sh --url "http://appsurify.dev.appsurify.com" --apikey "MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" --project "Test" --testsuite "Test" --report "report" --teststorun "all" --startrun "C:\apache\apache-maven-3.5.0\bin\mvn tests " 
 
 
@@ -146,7 +145,4 @@ echo $commitId
 
 #$url $apiKey $project $testsuite $fail $additionalargs $endrun $testseparator $postfixtest $prefixtest $startrun $fullnameseparator $fullname $failfast $maxrerun $rerun $importtype $teststorun $reporttype $report $commitId $run_id
 echo "Getting tests to run"
-. ./GetAndRunTests.sh
-
-
-RunTestsWithAppsurify.sh --url "http://appsurify.dev.appsurify.com" --apikey "MTpEbzhXQThOaW14bHVQTVdZZXNBTTVLT0xhZ00" --project "Test" --testsuite "Test" --report "report" --teststorun "all" --startrun "mvn tests" 
+#. ./GetAndRunTests.sh

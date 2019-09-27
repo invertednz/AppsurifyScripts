@@ -79,9 +79,9 @@ if [[ $finalTestNames != "" ]] ; then execute_tests $finalTestNames ; failfast_t
 
 ###
 #if tests == all just run tests
-if [[ $teststorun == "all" ]] ; then execute_tests "" 0 ; fi
+if [[ $teststorun == "all" ]] ; then echo "running all tests" ; execute_tests "" 0 ; fi
 
-if [[ $teststorun == "none" ]] ; then . ./PushResultsToAppsurify.sh  ; fi
+if [[ $teststorun == "none" ]] ; then echo "not running any tests" ; . ./PushResultsToAppsurify.sh  ; fi
 
 index=0
 if [[ $teststorun == *high* ]] ; then testtypes[index]=1 ; ((index++)) ; fi
@@ -101,6 +101,8 @@ done
 
 if [[ $failfast == "false" && $rerun == "true" ]] ; then rerun_tests ; fi
 
+
+echo "getting results from test run $run_id"
 . ./GetResultsFromAppsurify.sh
 #if not then get tests
 
